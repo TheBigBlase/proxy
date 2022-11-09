@@ -1,2 +1,5 @@
 .idea/
 **/__pycache__/
+
+id_rsa.pub
+id_rsa
