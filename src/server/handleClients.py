@@ -1,3 +1,5 @@
+import requests as req
+
 def client_handler(*arg):
     """
     Main function of the client handler
@@ -5,12 +7,8 @@ def client_handler(*arg):
     """
     connection = arg[0]
     while True:
-        data = connection.recv(32)
-        print("Received data: {data}")
+        data = str(connection.recv(2048))
+        print(data)
 
-        cmd = data.split(" ")[0]
-        if cmd.startswith(b"exit"):
-            break
-
-
-
+        #if cmd.startswith(b"exit"):
+        #    break

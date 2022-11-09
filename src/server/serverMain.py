@@ -1,17 +1,17 @@
 import socket
 import sys
 from threading import Thread
-from handleClients import client_handler
+from src.server.handleClients import client_handler
 
-def serverMain():
+def server_main():
     # Set up a TCP/IP server
     tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # PORT
-    PORT = 5555
+    client_port = 5555
 
     # Bind the socket to server address and PORT
-    server_address = ('localhost', PORT)
+    server_address = ('localhost', client_port)
     tcp_socket.bind(server_address)
 
     # Listen on PORT
@@ -40,4 +40,4 @@ def serverMain():
     # Joining threads
     for thread in thread_pool:
         print("closing threads")
-        thread.join()
+        thread.join(2)
