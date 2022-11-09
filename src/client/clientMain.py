@@ -1,27 +1,37 @@
 import socket as sk
-
 """
 J'ai paramétré mon navigateur (Firefox) pour qu'il redirige toutes les données 
 HTTP et HTTPS au localhost port 1700
 """
 
-def clientMain():
-    numeroPort = 1700
+def client_main():
+    browser_port = 1700 # listen to browser
+    server_port = 5555 # connect to proxy
 
-    socketServeur = sk.socket()
-    socketServeur.bind(("", numeroPort))
-    socketServeur.listen()
-    print("\nA l'écoute\n")
+    socket_client = sk.socket(sk.AF_INET, sk.SOCK_STREAM)
+    socket_client.bind(("", browser_port))
+    socket_client.listen()
+    print("Listening to browser")
 
-    while (True) :
-        (socketPourClient, clientIP) = socketServeur.accept()
-        """
-        print(socketForClient, "\n")
-        print(clientIP, "\n")
-        print(serverSocket)
-        """
-        data = socketPourClient.recv(1700)
-        print("************************\n", data, "\n************************\n\n")
+    socket_proxy = sk.socket(sk.AF_INET, sk.SOCK_STREAM)
+    socket_proxy.connect(("localhost", server_port))
 
-        socketPourClient.close()
-        #TODO : close socket when interupt / finished
+    print("connected to server")
+
+    while True:
+        try:
+            (file_descriptor, client_IP) = socket_client.accept()
+            """
+            print(socketForClient, "\n")
+            print(clientIP, "\n")
+            print(serverSocket)
+            """
+            data = file_descriptor.recv(1700)
+            socket_proxy.sendall(data)
+            print("************************\n", data, "\n************************\n\n")
+
+            file_descriptor.close()
+        except KeyboardInterrupt:
+            socket_client.close()
+            socket_proxy.close()
+            #TODO : close socket when interupt / finished

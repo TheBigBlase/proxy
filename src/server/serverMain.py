@@ -4,8 +4,6 @@ from threading import Thread
 from src.server.handleClients import client_handler
 from cryptography.hazmat.primitives import serialization
 
-
-
 def serverMain():
     with open("./id_rsa", "rb") as key_file:
         server_private_key = serialization.load_pem_private_key(
@@ -20,10 +18,10 @@ def serverMain():
     tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # PORT
-    PORT = 5555
+    client_port = 5555
 
     # Bind the socket to server address and PORT
-    server_address = ('localhost', PORT)
+    server_address = ('localhost', client_port)
     tcp_socket.bind(server_address)
 
     # Listen on PORT
@@ -57,4 +55,4 @@ def serverMain():
     # Joining threads
     for thread in thread_pool:
         print("closing threads")
-        thread.join()
+        thread.join(2)

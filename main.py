@@ -1,7 +1,7 @@
-from src.server.serverMain import serverMain
-from src.client.clientMain import clientMain
-
 import argparse
+from src.server.serverMain import server_main
+from src.client.clientMain import client_main
+
 
 if __name__ == "__main__":
     ## BEGIN ARGUMENT PARSER
@@ -18,8 +18,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     ## END ARGUMENT PARSER
     if args.server:
-        serverMain()
+        server_main()
     elif args.client:
-        clientMain()
+        client_main()
     else:
         print("Error : please specify either --client or --server")

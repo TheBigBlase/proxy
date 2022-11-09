@@ -1,7 +1,10 @@
+import requests as req
+
+
 def client_handler(**kwargs):
     """
     Main function of the client handler
-    :param arg:  arg passed by the thread
+    :param kwargs:  arg passed by the thread
     """
     connection = kwargs["connection"]
     server_private_key = kwargs["server_private_key"]
@@ -10,12 +13,8 @@ def client_handler(**kwargs):
     connection.send("SENDING SERVER PUBLIC KEY\n" + server_public_key)
 
     while True:
-        data = connection.recv(32)
-        print("Received data: {data}")
+        data = str(connection.recv(2048))
+        print(data)
 
-        cmd = data.split(" ")[0]
-        if cmd.startswith(b"exit"):
-            break
-
-
-
+        #if cmd.startswith(b"exit"):
+        #    break
