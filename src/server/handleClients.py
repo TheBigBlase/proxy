@@ -1,16 +1,20 @@
 from requests import Request, Session
 from requests.exceptions import InvalidSchema, ConnectionError
 
-def client_handler(*arg):
+
+def client_handler(**kwargs):
     """
     Main function of the client handler
-    :param arg:  arg passed by the thread
+    :param kwargs:  arg passed by the thread
     """
     s = Session()
 
+    connection = kwargs["connection"]
+    server_private_key = kwargs["server_private_key"]
+    server_public_key = kwargs["server_public_key"]
 
+    connection.send("SENDING SERVER PUBLIC KEY\n" + server_public_key)
 
-    connection = arg[0]
     while True:
         data = connection.recv(5000).decode()
         reqs = data.split("\r\n\r\n")
