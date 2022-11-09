@@ -8,9 +8,9 @@ def client_main():
     browser_port = 1700 # listen to browser
     server_port = 5555 # connect to proxy
 
-    socket_client = sk.socket(sk.AF_INET, sk.SOCK_STREAM)
-    socket_client.bind(("", browser_port))
-    socket_client.listen()
+    socket_browser = sk.socket(sk.AF_INET, sk.SOCK_STREAM)
+    socket_browser.bind(("", browser_port))
+    socket_browser.listen()
     print("Listening to browser")
 
     socket_proxy = sk.socket(sk.AF_INET, sk.SOCK_STREAM)
@@ -20,18 +20,27 @@ def client_main():
 
     while True:
         try:
-            (file_descriptor, client_IP) = socket_client.accept()
+            (file_descriptor, client_IP) = socket_browser.accept()
             """
             print(socketForClient, "\n")
             print(clientIP, "\n")
             print(serverSocket)
             """
-            data = file_descriptor.recv(1700)
+            data = file_descriptor.recv(5000)
             socket_proxy.sendall(data)
-            print("************************\n", data, "\n************************\n\n")
+            res = socket_proxy.recv(20000)
+
+            file_descriptor.send(res + b"\r\n\r\n")
+            res.decode("utf-8")
+
+            print(res + b"\r\n\r\n")
 
             file_descriptor.close()
-        except KeyboardInterrupt:
-            socket_client.close()
+
+        except (KeyboardInterrupt, OSError):
+            socket_browser.close()
             socket_proxy.close()
             #TODO : close socket when interupt / finished
+        except UnicodeDecodeError:
+            pass
+
