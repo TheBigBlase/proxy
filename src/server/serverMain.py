@@ -1,9 +1,21 @@
 import socket
 import sys
 from threading import Thread
-from handleClients import client_handler
+from src.server.handleClients import client_handler
+from cryptography.hazmat.primitives import serialization
+
+
 
 def serverMain():
+    with open("./id_rsa", "rb") as key_file:
+        server_private_key = serialization.load_pem_private_key(
+            key_file.read(),
+            password=None,
+        )
+
+    with open("./id_rsa.pub", "rb") as key_file:
+        server_public_key = key_file.read()
+
     # Set up a TCP/IP server
     tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -27,12 +39,17 @@ def serverMain():
         # Breaks when ctrl+c
         except KeyboardInterrupt:
             break
+
         print(f"Connected to client IP: {client}")
 
-        thread = Thread(target=client_handler, args=(connection, client))
+        kwargs = {"connection": connection,
+                  "client": client,
+                  "server_private_key": server_private_key,
+                  "server_public_key": server_public_key}
+
+        thread = Thread(target=client_handler, kwargs=kwargs)
         thread.start()
         thread_pool.append(thread)
-
 
     # Closing socket
     tcp_socket.close()
