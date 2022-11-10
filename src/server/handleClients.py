@@ -1,5 +1,5 @@
 from requests import Request, Session
-from requests.exceptions import ConnectionError, InvalidSchema
+from requests.exceptions import InvalidSchema, ConnectionError
 
 from src.utils import initiate_connection
 
@@ -10,7 +10,6 @@ def client_handler(**kwargs):
     :param kwargs:  arg passed by the thread
     """
     s = Session()
-
 
     socket = kwargs["connection"]
     server_private_key = kwargs["server_private_key"]
