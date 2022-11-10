@@ -24,7 +24,6 @@ def client_handler(**kwargs):
         reqs.remove("")
 
         for req in reqs:
-            print(req)
             first_req = req.replace("\r","").split("\n")
 
             first_line = first_req[0].split(" ")
@@ -45,9 +44,11 @@ def client_handler(**kwargs):
                 except ValueError:
                     pass
 
-            print(first_line[0], first_line[1], output)
-
+            #build and send request
             request = Request(first_line[0], first_line[1], headers = output).prepare()
             res = s.send(request)
+
+            print("[REQ]", *(k for k in first_line), res.status_code)#lmao
             socket.send(res.content)
             #TODO handle https
+            #TODO encrypt / decrypt request from client with its pubkey

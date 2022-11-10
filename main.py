@@ -30,15 +30,20 @@ if __name__ == "__main__":
                 private_key = serialization.load_pem_private_key(
                     key_file.read(),
                     password=None,
-                )
+                )\
+                .private_bytes(encoding=serialization.Encoding.PEM,
+                                format=serialization.PrivateFormat.PKCS8,
+                                encryption_algorithm=serialization.\
+                                        NoEncryption())
 
             with open("./id_rsa.pub", "rb") as key_file:
                 public_key = key_file.read()
-                
+
         except FileNotFoundError:
             print("No keys found ! please regen then with --regenRsa")
     else:
-        generateKeys()
+        public_key, private_key = generateKeys()
+
 
     ## END ARGUMENT PARSER
     if args.server:
