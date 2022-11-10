@@ -1,5 +1,7 @@
 from requests import Request, Session
-from requests.exceptions import InvalidSchema, ConnectionError
+from requests.exceptions import ConnectionError, InvalidSchema
+
+from src.utils import initiate_connection
 
 
 def client_handler(**kwargs):
@@ -9,14 +11,15 @@ def client_handler(**kwargs):
     """
     s = Session()
 
-    connection = kwargs["connection"]
+
+    socket = kwargs["connection"]
     server_private_key = kwargs["server_private_key"]
     server_public_key = kwargs["server_public_key"]
 
-    connection.send("SENDING SERVER PUBLIC KEY\n" + server_public_key)
+    client_public_key = initiate_connection(server_public_key, socket)
 
     while True:
-        data = connection.recv(5000).decode()
+        data = socket.recv(5000).decode()
         reqs = data.split("\r\n\r\n")
         reqs.remove("")
 
@@ -46,8 +49,5 @@ def client_handler(**kwargs):
 
             request = Request(first_line[0], first_line[1], headers = output).prepare()
             res = s.send(request)
-            connection.send(res.content)
+            socket.send(res.content)
             #TODO handle https
-
-        #if cmd.startswith(b"exit"):
-        #    break

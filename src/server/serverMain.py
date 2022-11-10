@@ -2,20 +2,11 @@ import socket
 import sys
 from threading import Thread
 from src.server.handleClients import client_handler
-from cryptography.hazmat.primitives import serialization
 
-def serverMain():
-    with open("./id_rsa", "rb") as key_file:
-        server_private_key = serialization.load_pem_private_key(
-            key_file.read(),
-            password=None,
-        )
-
-    with open("./id_rsa.pub", "rb") as key_file:
-        server_public_key = key_file.read()
-
+def server_main(server_private_key, server_public_key):
     # Set up a TCP/IP server
     tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    tcp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     # PORT
     client_port = 5555
