@@ -3,7 +3,7 @@ import argparse
 from cryptography.hazmat.primitives import serialization
 
 from src.client.clientMain import client_main
-from src.utils import generateKeys
+from src.RSA import generateKeys
 from src.server.serverMain import server_main
 
 if __name__ == "__main__":
@@ -30,11 +30,7 @@ if __name__ == "__main__":
                 private_key = serialization.load_pem_private_key(
                     key_file.read(),
                     password=None,
-                )\
-                .private_bytes(encoding=serialization.Encoding.PEM,
-                                format=serialization.PrivateFormat.PKCS8,
-                                encryption_algorithm=serialization.\
-                                        NoEncryption())
+                )
 
             with open("./id_rsa.pub", "rb") as key_file:
                 public_key = key_file.read()

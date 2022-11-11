@@ -3,6 +3,7 @@ import sys
 from threading import Thread
 from src.server.handleClients import client_handler
 
+
 def server_main(server_private_key, server_public_key):
     # Set up a TCP/IP server
     tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -12,7 +13,7 @@ def server_main(server_private_key, server_public_key):
     client_port = 5555
 
     # Bind the socket to server address and PORT
-    server_address = ('localhost', client_port)
+    server_address = ('', client_port)
     tcp_socket.bind(server_address)
 
     # Listen on PORT
