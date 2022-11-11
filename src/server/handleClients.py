@@ -1,7 +1,7 @@
 from requests import Request, Session
 from requests.exceptions import InvalidSchema, ConnectionError
 
-from src.utils import initiate_connection, encrypt, decrypt, chunk_and_encrypt
+from src.utils import initiate_connection, encrypt, decrypt, split_and_encrypt, join_and_decrypt
 
 
 def client_handler(**kwargs):
@@ -41,12 +41,9 @@ def client_handler(**kwargs):
         if encrypted_data_chunks == b'':
             continue
 
-        print(encrypted_data_chunks)
-        data_chunks = [decrypt(server_private_key, encrypted_data) for encrypted_data in
-                       encrypted_data_chunks.split(b';\n;\n')]
-        print(data_chunks)
+        # Joining and decrypting chunks
+        data = str(join_and_decrypt(server_private_key, encrypted_data_chunks))
 
-        data = str(b''.join(data_chunks))
         print(data)
         print(f"Type de data: {type(data)}")
 
@@ -84,7 +81,8 @@ def client_handler(**kwargs):
 
             print("[REQ]", *(k for k in first_line), res.status_code)  # lmao
 
-            encrypted_data_chunks = chunk_and_encrypt(client_public_key, res.content)
+            # Splitting and encrypting chunks
+            encrypted_data_chunks = split_and_encrypt(client_public_key, res.content)
 
             socket.sendall(encrypted_data_chunks)
 

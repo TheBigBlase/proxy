@@ -2,7 +2,7 @@ import socket as sk
 import math
 import time
 
-from src.utils import initiate_connection, encrypt, decrypt, chunk_and_encrypt
+from src.utils import initiate_connection, encrypt, decrypt, split_and_encrypt, join_and_decrypt
 
 """
 J'ai paramétré mon navigateur (Firefox) pour qu'il redirige toutes les données 
@@ -54,16 +54,18 @@ def client_main(client_private_key, client_public_key):
             print(data)
 
             # Splitting data into separate chunks cause of RSA asymmetric limitations
-            encrypted_data_chunks = chunk_and_encrypt(server_public_key, data)
+            encrypted_data_chunks = split_and_encrypt(server_public_key, data)
 
+            # Sending the request
             socket_proxy.sendall(encrypted_data_chunks)
 
+            # Receiving the response as chunks
             encrypted_data_chunks = socket_proxy.recv(5000)
 
-            data_chunks = [decrypt(client_private_key, encrypted_data) for encrypted_data in
-                           encrypted_data_chunks.split(b';\n;\n')]
+            # Joining and decrypting chunks
+            data = join_and_decrypt(client_private_key, encrypted_data_chunks)
 
-            file_descriptor.send(b''.join(data_chunks) + b"\r\n\r\n")
+            file_descriptor.send(data + b"\r\n\r\n")
 
             file_descriptor.close()
 

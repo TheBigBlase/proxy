@@ -24,10 +24,47 @@ def decrypt(private_key, data):
     ))
 
 
-def chunk_and_encrypt(public_key, data, chunk_size=190):
+def split_and_encrypt(public_key, data, chunk_size=190):
+    """
+    Split data into chunks with a len of chunk_size
+    Each chunk is then encrypted
+    :param public_key:
+    :param data:
+    :param chunk_size:
+    :return: byte
+    """
     data_chunks = []
 
+    # Loops the exact number of chunks needed
     for i in range(math.ceil(len(data) / chunk_size)):
         data_chunks.append(data[i * chunk_size:i * chunk_size + chunk_size])
 
-    return b';\n;\n'.join([encrypt(public_key, data) for data in data_chunks])
+    encrypted_data_chunks = []
+
+    # Encrypt each chunk
+    for data in data_chunks:
+        encrypted_data_chunks.append(encrypt(public_key, data))
+
+    # Joins each chunks with a separator
+    res = b';\n;\n'.join(encrypted_data_chunks)
+
+    return res
+
+
+def join_and_decrypt(private_key, data):
+    """
+    Decrypts each chunk and join
+    :param private_key:
+    :param data:
+    :return: original data
+    """
+    data_chunks = []
+
+    # Splitting and decrypting each chunk
+    for encrypted_data in data.split(b';\n;\n'):
+        data_chunks.append(decrypt(private_key, encrypted_data))
+
+    # Joins each chunk to retrieve the original string
+    res = b''.join(data_chunks)
+
+    return res
