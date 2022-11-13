@@ -42,7 +42,7 @@ def client_handler(**kwargs):
             continue
 
         # Joining and decrypting chunks
-        data = str(join_and_decrypt(server_private_key, encrypted_data_chunks))
+        data = str(join_and_decrypt(server_private_key, encrypted_data_chunks), "utf-8")
 
         print(data)
         print(f"Type de data: {type(data)}")
