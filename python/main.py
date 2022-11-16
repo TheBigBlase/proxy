@@ -2,7 +2,6 @@ import argparse
 import subprocess
 
 from cryptography.hazmat.primitives import serialization
-
 from src.RSA import generate_keys
 from src.client.clientMain import client_main
 from src.server.serverMain import server_main

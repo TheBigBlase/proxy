@@ -5,7 +5,6 @@ from src.server.handleClients import client_handler
 from src.utils import sym_gen_key
 
 
-
 def server_main(server_private_key, server_public_key):
     # Set up a TCP/IP server
     tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
