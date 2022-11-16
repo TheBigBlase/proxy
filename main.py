@@ -2,8 +2,8 @@ import argparse
 
 from cryptography.hazmat.primitives import serialization
 
-from src.client.clientMain import client_main
 from src.RSA import generateKeys
+from src.client.clientMain import client_main
 from src.server.serverMain import server_main
 
 if __name__ == "__main__":
@@ -19,6 +19,9 @@ if __name__ == "__main__":
 
     parser.add_argument("-r", "--regenRsa", help = "regen rsa keys",
             action="store_true", default = False)
+
+    parser.add_argument("-i", "--ipServer", help = "specify ip address of server" \
+            + " (default = localhost)", default = "localhost")
 
     args = parser.parse_args()
 
@@ -45,6 +48,6 @@ if __name__ == "__main__":
     if args.server:
         server_main(private_key, public_key)
     elif args.client:
-        client_main(private_key, public_key)
+        client_main(private_key, public_key, args.ipServer)
     else:
         print("Error : please specify either --client or --server")

@@ -1,3 +1,4 @@
 .idea/
 **/__pycache__/
 **/id_rsa*
+.vimspector.json

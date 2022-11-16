@@ -2,6 +2,7 @@ import socket
 import sys
 from threading import Thread
 from src.server.handleClients import client_handler
+from src.utils import sym_gen_key
 
 
 def server_main(server_private_key, server_public_key):
@@ -32,10 +33,14 @@ def server_main(server_private_key, server_public_key):
 
         print(f"Connected to client IP: {client}")
 
+        fernet = sym_gen_key()
+
         kwargs = {"connection": connection,
                   "client": client,
                   "server_private_key": server_private_key,
-                  "server_public_key": server_public_key}
+                  "server_public_key": server_public_key,
+                  "fernet": fernet
+                  }
 
         thread = Thread(target=client_handler, kwargs=kwargs)
         thread.start()
