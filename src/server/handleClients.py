@@ -46,18 +46,19 @@ def test_rsa(socket, server_private_key, client_public_key)->Fernet:
 
 
 def recieve_from_client(socket, server_private_key, fernet)->list[str]:
-    encrypted_data_chunks = socket.recv(5000)
+    encrypted_data = socket.recv(5000)
 
-    if encrypted_data_chunks == b'':
+    if encrypted_data == b'':
         return [""]
 
     # Joining and decrypting chunks
-    #data = str(asym_join_and_decrypt(server_private_key, encrypted_data_chunks), "utf-8")
+    #data = str(asym_join_and_decrypt(server_private_key, encrypted_data), "utf-8")
     #sym version : 
-    data = str(sym_decrypt(encrypted_data_chunks, fernet), "utf-8")
-
-    #print(data)
-    print(f"Type de data: {type(data)}")
+    try:
+        data = str(sym_decrypt(encrypted_data, fernet), "utf-8")
+    except UnicodeDecodeError:
+        #remove B'...' manually
+        data = str(sym_decrypt(encrypted_data, fernet))[2:-2]
 
     reqs = data.split("\r\n\r\n")
 
@@ -97,6 +98,7 @@ def client_handler(**kwargs):
 
             if first_line[0].startswith("CONNECT"):
                 print("[CONNECT] unhandled connect request (https)")
+                socket.close()#it crashes anyway, faster this way
                 continue
 
 
@@ -122,11 +124,8 @@ def client_handler(**kwargs):
 
             print("[REQ]", *(k for k in first_line), res.status_code)  # lmao
 
-            # Splitting and encrypting chunks
-            #encrypted_data_chunks = asym_split_and_encrypt(client_public_key, res.content)
-            #sym way :
-            encrypted_data_chunks = sym_encrypt(res.content, fernet)
+            #sym encrypt and send data
+            encrypted_data = sym_encrypt(res.content, fernet)
 
-            socket.sendall(encrypted_data_chunks)
-
+            socket.sendall(encrypted_data)
             #TODO handle https

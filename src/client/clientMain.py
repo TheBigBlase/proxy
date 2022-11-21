@@ -28,7 +28,6 @@ def test_rsa(socket_proxy, server_public_key, client_private_key):
 
     while data == b'':
         data = socket_proxy.recv(2048)
-        print(data)
 
     if asym_decrypt(client_private_key, data) == b'Indeed, rammus best waifu':
         print("RSA is working server side, sending ack")
@@ -75,24 +74,16 @@ def client_main(client_private_key, client_public_key, server_ip):
             # receive and send request
             data = file_descriptor.recv(5000)
 
-            # Splitting data into separate chunks cause of RSA asymmetric limitations
-            #encrypted_data_chunks = asym_split_and_encrypt(server_public_key, data)
-            #sym way
-            encrypted_data_chunks = sym_encrypt(data, fernet)
-
+            #sym encription of data
+            data = sym_encrypt(data, fernet)
 
             # Sending the request
-            socket_proxy.sendall(encrypted_data_chunks)
+            socket_proxy.sendall(data)
 
-            # Receiving the response as chunks
-            encrypted_data_chunks = socket_proxy.recv(5000)
-
-            # Joining and decrypting chunks
-            #data = asym_join_and_decrypt(client_private_key, encrypted_data_chunks)
-            #trying with sym
-            data = sym_decrypt(encrypted_data_chunks, fernet)
-
-            file_descriptor.send(data + b"\r\n\r\n")
+            # Receiving the response (100kB max)
+            data = socket_proxy.recv(100000)
+            data = sym_decrypt(data, fernet)
+            file_descriptor.send(data)
 
             file_descriptor.close()
 

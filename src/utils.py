@@ -1,7 +1,7 @@
 import math
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 
 
 ##ASYM FUNCTIONS
@@ -86,4 +86,8 @@ def sym_encrypt(message, f):
     return f.encrypt(message)
 
 def sym_decrypt(crypted, f):
-    return f.decrypt(crypted)
+    try:
+        return f.decrypt(crypted)
+    except InvalidToken:
+        print("[SYM DECRYPT] invalid token : probably page too big")
+        exit(0)
