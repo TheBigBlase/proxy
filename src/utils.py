@@ -86,8 +86,4 @@ def sym_encrypt(message, f):
     return f.encrypt(message)
 
 def sym_decrypt(crypted, f):
-    try:
-        return f.decrypt(crypted)
-    except InvalidToken:
-        print("[SYM DECRYPT] invalid token : probably page too big")
-        exit(0)
+    return f.decrypt(crypted)

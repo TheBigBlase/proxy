@@ -1,6 +1,8 @@
 from requests import Request, Session
 from requests.exceptions import ConnectionError, InvalidSchema
 
+import socket as sk
+
 from src.utils import (
     asym_decrypt,
     asym_encrypt,
@@ -20,7 +22,6 @@ def test_rsa(socket, server_private_key, client_public_key)->Fernet:
     data = b''
     while data == b'':
         data = socket.recv(2048)
-        print(data)
 
     if asym_decrypt(server_private_key, data) == b'Rammus best waifu':
         print("RSA is working client side")
@@ -45,29 +46,18 @@ def test_rsa(socket, server_private_key, client_public_key)->Fernet:
     return fernet
 
 
-def recieve_from_client(socket, server_private_key, fernet)->list[str]:
+def recieve_from_client(socket, server_private_key, fernet):
     encrypted_data = socket.recv(5000)
 
     if encrypted_data == b'':
-        return [""]
+        return b""
 
     # Joining and decrypting chunks
     #data = str(asym_join_and_decrypt(server_private_key, encrypted_data), "utf-8")
-    #sym version : 
-    try:
-        data = str(sym_decrypt(encrypted_data, fernet), "utf-8")
-    except UnicodeDecodeError:
-        #remove B'...' manually
-        data = str(sym_decrypt(encrypted_data, fernet))[2:-2]
+    #sym version :
+    data = sym_decrypt(encrypted_data, fernet)
 
-    reqs = data.split("\r\n\r\n")
-
-    try:
-        reqs.remove("")
-    except ValueError as error:
-        print(error)
-
-    return reqs
+    return data
 
 
 def client_handler(**kwargs):
@@ -75,57 +65,69 @@ def client_handler(**kwargs):
     Main function of the client handler
     :param kwargs:  arg passed by the thread
     """
-    session = Session()
 
-    socket = kwargs["connection"]
+    client_socket = kwargs["connection"]
     server_private_key = kwargs["server_private_key"]
     server_public_key = kwargs["server_public_key"]
     fernet = kwargs["fernet"]
 
-    client_public_key = asym_initiate_connection(server_public_key, socket)
+    client_public_key = asym_initiate_connection(server_public_key, client_socket)
 
-    print(f"Connected with client {kwargs['client']}")
-
-    fernet = test_rsa(socket, server_private_key, client_public_key)
+    fernet = test_rsa(client_socket, server_private_key, client_public_key)
 
     while True:
-        reqs = recieve_from_client(socket, server_private_key, fernet)
+        webserver = ""
+        trueReq = recieve_from_client(client_socket, server_private_key, fernet)
+        reqs = str(trueReq)[2:-1]
 
-        for req in reqs:
-            first_req = req.replace("\r", "").split("\n")
+        first_req = reqs.replace("\r", "").split("\n")
 
-            first_line = first_req[0].split(" ")
+        first_line = first_req[0].split(" ")
 
-            if first_line[0].startswith("CONNECT"):
-                print("[CONNECT] unhandled connect request (https)")
-                socket.close()#it crashes anyway, faster this way
+
+        if first_line[0] == "CONNECT":
+            try:
+                webserver = first_line[1]
+                webserver = webserver.split(":")
+                webserver, port = webserver[0].replace("https://", "").split("/")[0], int(webserver[1])
+            except ValueError as e:
+                print(e)
                 continue
+        else:
+            webserver = first_line[1].replace("http://", "").split("/")[0]
+            port = 80
 
+        web_socket = sk.socket(sk.AF_INET, sk.SOCK_STREAM)
+        # reuse socket after crash (don't wait 1 min)
+        web_socket.setsockopt(sk.SOL_SOCKET, sk.SO_REUSEADDR, 1)
 
-            fields = first_req[1:]  # ignore the GET / HTTP/1.1
-            if "" in fields:
-                fields.remove("")
-            output = {}
+        web_socket.connect((webserver, port))
 
-            for field in fields:
-                if not field:
-                    continue
-                try:
-                    key, value = field.split(': ')
-                    output[key] = value
-                except (InvalidSchema, ConnectionError):
-                    continue
-                except ValueError:
-                    pass
+        web_socket.send(trueReq)
 
-            # build and send request
-            request = Request(first_line[0], first_line[1], headers=output).prepare()
-            res = session.send(request)
+        # Makefile for socket
+        file_object = web_socket.makefile('wb', 0)
+        file_object.write(b"GET " + bytes(first_line[1], "utf-8") + b" HTTP/1.0\n\n")
 
-            print("[REQ]", *(k for k in first_line), res.status_code)  # lmao
+        res = web_socket.makefile("rb").readlines()
+        file_object.close()
+        web_socket.close()
 
-            #sym encrypt and send data
-            encrypted_data = sym_encrypt(res.content, fernet)
+        size = []
+        toSend = []
 
-            socket.sendall(encrypted_data)
-            #TODO handle https
+        for i in range(0, len(res)):
+            toSend.append(sym_encrypt(res[i], fernet))
+            size.append(len(toSend[i]))
+
+        client_socket.send(b"{\"SIZE\": " + bytes(str(size), "utf-8") + b"}")
+        #recv ack
+        if client_socket.recv(2) != b"OK":
+            print("error")
+            exit(-1)
+
+        for i in toSend:
+            client_socket.send(i)
+
+        print("[REQ]", *(k for k in first_line),
+              "OK" if res[0][12:15] == "OK" else "ERROR") # lmao

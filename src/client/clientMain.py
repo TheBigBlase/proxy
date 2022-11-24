@@ -1,6 +1,7 @@
 import math
 import socket as sk
 import time
+import json
 
 from src.utils import (
     asym_decrypt,
@@ -43,7 +44,6 @@ def test_rsa(socket_proxy, server_public_key, client_private_key):
     return fernet
 
 
-
 def client_main(client_private_key, client_public_key, server_ip):
     browser_port = 1700  # listen to browser
     server_port = 5555  # connect to proxy
@@ -56,40 +56,48 @@ def client_main(client_private_key, client_public_key, server_ip):
     socket_browser.listen()
     print("Listening to browser")
 
+    #create proxy socket
     socket_proxy = sk.socket(sk.AF_INET, sk.SOCK_STREAM)
-    # reuse socket after crash (don't wait 1 min)
     socket_proxy.setsockopt(sk.SOL_SOCKET, sk.SO_REUSEADDR, 1)
     socket_proxy.connect((server_ip, server_port))
+    print("connected to server.")
+    #regen key for each client
 
     server_public_key = asym_initiate_connection(client_public_key, socket_proxy)
-
     fernet = test_rsa(socket_proxy, server_public_key, client_private_key)
-
-    print("connected to server.")
 
     while True:
         try:
             (file_descriptor, _) = socket_browser.accept()
 
             # receive and send request
-            data = file_descriptor.recv(5000)
+            req = file_descriptor.recv(5000)
 
             #sym encription of data
-            data = sym_encrypt(data, fernet)
+            req = sym_encrypt(req, fernet)
 
             # Sending the request
-            socket_proxy.sendall(data)
+            socket_proxy.sendall(req)
 
-            # Receiving the response (100kB max)
-            data = socket_proxy.recv(100000)
-            data = sym_decrypt(data, fernet)
-            file_descriptor.send(data)
+            data = b""
+
+            sizeArray = str(socket_proxy.recv(2048), "utf-8")
+            sizeArray = json.loads(sizeArray)# please god forgive me
+
+            sizeArray = sizeArray["SIZE"]
+
+            socket_proxy.send(b"OK")
+
+            for size in sizeArray:
+                packet = socket_proxy.recv(size)
+                file_descriptor.send(sym_decrypt(packet, fernet))
+            #fuck this code
+
 
             file_descriptor.close()
 
         except (KeyboardInterrupt, OSError):
             socket_browser.close()
-            socket_proxy.close()
             # TODO : close socket when interupt / finished
         except UnicodeDecodeError as e:
             print(e)

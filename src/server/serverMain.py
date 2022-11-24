@@ -14,7 +14,7 @@ def server_main(server_private_key, server_public_key):
     client_port = 5555
 
     # Bind the socket to server address and PORT
-    server_address = ('', client_port)
+    server_address = ('localhost', client_port)
     tcp_socket.bind(server_address)
 
     # Listen on PORT
@@ -44,6 +44,7 @@ def server_main(server_private_key, server_public_key):
 
         thread = Thread(target=client_handler, kwargs=kwargs)
         thread.start()
+        print("NEW client creating new thread")
         thread_pool.append(thread)
 
     # Closing socket
@@ -52,4 +53,4 @@ def server_main(server_private_key, server_public_key):
     # Joining threads
     for thread in thread_pool:
         print("closing threads")
-        thread.join(2)
+        thread.join(0)

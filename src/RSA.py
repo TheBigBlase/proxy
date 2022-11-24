@@ -3,16 +3,16 @@ from cryptography.hazmat.primitives import serialization
 import os
 
 
-def generateKeys():
-    privateKey = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    publicKey = privateKey.public_key()
+def generate_keys():
+    private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    public_key = private_key.public_key()
 
-    privateKey = privateKey.private_bytes(
+    private_key = private_key.private_bytes(
                     encoding=serialization.Encoding.PEM,
                     format=serialization.PrivateFormat.PKCS8,
                     encryption_algorithm=serialization.NoEncryption()
                 )
-    publicKey = publicKey.public_bytes(
+    public_key = public_key.public_bytes(
                     encoding=serialization.Encoding.PEM,
                     format=serialization.PublicFormat.SubjectPublicKeyInfo
                 )
@@ -20,19 +20,19 @@ def generateKeys():
     
     with open("id_rsa", "wb") as file:
         file.write(
-            privateKey
+            private_key
         )
 
     # Write the public key in the id_ras.pub file
     with open("id_rsa.pub", "wb") as file:
         file.write(
-            publicKey
+            public_key
         )
 
     os.chmod("id_rsa", 0o700)#private key is read only form user only
 
-    return publicKey, privateKey
+    return public_key, private_key
 
 
-#publicKey, privateKey = generatePrivateKey()
+#public_key, private_key = generatePrivateKey()
 
