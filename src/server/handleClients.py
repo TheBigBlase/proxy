@@ -59,6 +59,50 @@ def recieve_from_client(socket, server_private_key, fernet):
 
     return data
 
+def handle_https(web_socket, client_socket, fernet, address, webserver, port, req):
+    web_socket.connect((webserver, port))
+    web_socket.send(req)
+
+    web_socket.setblocking(0)
+    client_socket.setblocking(0)
+
+    request = web_socket.recv(10000)
+
+    web_socket.close()
+    client_socket.sendall(sym_encrypt(request, fernet))
+
+def handle_http(web_socket, client_socket, fernet, address, webserver, port, req):
+
+    web_socket.connect((webserver, port))
+    web_socket.send(req)
+
+    # Makefile for socket
+    file_object = web_socket.makefile('wb', 0)
+    file_object.write(b"GET " + bytes(address, "utf-8") + b" HTTP/1.0\n\n")
+
+    res = web_socket.makefile("rb").readlines()
+    file_object.close()
+    web_socket.close()
+
+    size = []
+    toSend = []
+
+    for i in range(0, len(res)):
+        toSend.append(sym_encrypt(res[i], fernet))
+        size.append(len(toSend[i]))
+
+    client_socket.send(b"{\"SIZE\": " + bytes(str(size), "utf-8") + b"}")
+    #recv ack
+    if client_socket.recv(2) != b"OK":
+        print("error")
+        exit(-1)
+
+    for i in toSend:
+        client_socket.send(i)
+
+    print("[REQ]", address,
+          "OK" if res[0][12:15] == "OK" else "ERROR") # lmao
+
 
 def client_handler(**kwargs):
     """
@@ -85,49 +129,18 @@ def client_handler(**kwargs):
         first_line = first_req[0].split(" ")
 
 
-        if first_line[0] == "CONNECT":
-            try:
-                webserver = first_line[1]
-                webserver = webserver.split(":")
-                webserver, port = webserver[0].replace("https://", "").split("/")[0], int(webserver[1])
-            except ValueError as e:
-                print(e)
-                continue
-        else:
-            webserver = first_line[1].replace("http://", "").split("/")[0]
-            port = 80
-
         web_socket = sk.socket(sk.AF_INET, sk.SOCK_STREAM)
         # reuse socket after crash (don't wait 1 min)
         web_socket.setsockopt(sk.SOL_SOCKET, sk.SO_REUSEADDR, 1)
 
-        web_socket.connect((webserver, port))
 
-        web_socket.send(trueReq)
+        if first_line[0] == "CONNECT":
+            webserver = first_line[1]
+            webserver = webserver.split(":")
+            webserver, port = webserver[0].replace("https://", "").split("/")[0], int(webserver[1])
+            handle_https(web_socket, client_socket, fernet, first_line[1], webserver, port, trueReq)
 
-        # Makefile for socket
-        file_object = web_socket.makefile('wb', 0)
-        file_object.write(b"GET " + bytes(first_line[1], "utf-8") + b" HTTP/1.0\n\n")
-
-        res = web_socket.makefile("rb").readlines()
-        file_object.close()
-        web_socket.close()
-
-        size = []
-        toSend = []
-
-        for i in range(0, len(res)):
-            toSend.append(sym_encrypt(res[i], fernet))
-            size.append(len(toSend[i]))
-
-        client_socket.send(b"{\"SIZE\": " + bytes(str(size), "utf-8") + b"}")
-        #recv ack
-        if client_socket.recv(2) != b"OK":
-            print("error")
-            exit(-1)
-
-        for i in toSend:
-            client_socket.send(i)
-
-        print("[REQ]", *(k for k in first_line),
-              "OK" if res[0][12:15] == "OK" else "ERROR") # lmao
+        else:
+            webserver = first_line[1].replace("http://", "").split("/")[0]
+            port = 80
+            handle_http(web_socket, client_socket, fernet, first_line[1], webserver, port, trueReq)
