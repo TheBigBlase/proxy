@@ -14,7 +14,7 @@ def server_main(server_private_key, server_public_key):
     client_port = 5555
 
     # Bind the socket to server address and PORT
-    server_address = ('', client_port)
+    server_address = ('localhost', client_port)
     tcp_socket.bind(server_address)
 
     # Listen on PORT
