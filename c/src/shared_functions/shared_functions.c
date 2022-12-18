@@ -20,34 +20,76 @@ EVP_PKEY *generate_keys() {
     return pkey;
 }
 
-char *encrypt(EVP_PKEY *pkey, char *message, unsigned int message_len) {
+unsigned char *encrypt(EVP_PKEY *pkey, unsigned char *unencrypted_text, size_t text_len) {
     EVP_PKEY_CTX *ctx;
-    ENGINE *eng;
-    unsigned char *out, *in;
-    size_t outlen, inlen;
+    ENGINE *eng = NULL;
+    unsigned char *out;
+    size_t outlen;
 
     ctx = EVP_PKEY_CTX_new(pkey, eng);
 
     if (!ctx)
+        printf("Error, bad context");
         /* Error occurred */
     if (EVP_PKEY_encrypt_init(ctx) <= 0)
+        printf("Error init");
         /* Error */
     if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING) <= 0)
+        printf("Error rsa padding");
         /* Error */
 
     /* Determine buffer length */
-    if (EVP_PKEY_encrypt(ctx, NULL, &outlen, in, inlen) <= 0)
+    if (EVP_PKEY_encrypt(ctx, NULL, &outlen, unencrypted_text, text_len) <= 0)
+        printf("Error encrypt");
         /* Error */
 
     out = OPENSSL_malloc(outlen);
 
     if (!out)
+        printf("Error malloc");
         /* malloc failure */
 
-    if (EVP_PKEY_encrypt(ctx, out, &outlen, in, inlen) <= 0)
+    if (EVP_PKEY_encrypt(ctx, out, &outlen, unencrypted_text, text_len) <= 0)
+        printf("Error encrypt");
         /* Error */
 
     /* Encrypted data is outlen bytes written to buffer out */
-    return NULL;
+    return out;
 }
 
+unsigned char *decrypt(EVP_PKEY *pkey, unsigned char *encrypted_text, size_t encrypted_text_len) {
+    EVP_PKEY_CTX *ctx;
+    ENGINE *eng = NULL;
+    unsigned char *decrypted_text;
+    size_t decrypted_text_len;
+
+    ctx = EVP_PKEY_CTX_new(pkey, eng);
+    if (!ctx)
+        printf("Error, bad context");
+        /* Error occurred */
+
+    if (EVP_PKEY_decrypt_init(ctx) <= 0)
+        printf("Error init");
+        /* Error */
+
+    if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING) <= 0)
+        printf("Error rsa padding");
+        /* Error */
+
+    /* Determine buffer length */
+    if (EVP_PKEY_decrypt(ctx, NULL, &decrypted_text_len, encrypted_text, encrypted_text_len) <= 0)
+        printf("Error decrypt");
+        /* Error */
+
+    decrypted_text = OPENSSL_malloc(decrypted_text_len);
+
+    if (!decrypted_text)
+        printf("Error malloc");
+        /* malloc failure */
+
+    if (EVP_PKEY_decrypt(ctx, decrypted_text, &decrypted_text_len, encrypted_text, encrypted_text_len) <= 0)
+        printf("Error decrypt");
+        /* Error */
+
+    return decrypted_text;
+}

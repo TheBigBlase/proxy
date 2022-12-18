@@ -15,6 +15,7 @@
 
 
 EVP_PKEY *generate_keys();
-char *encrypt(EVP_PKEY *pkey, char *message, unsigned int message_len);
+unsigned char *encrypt(EVP_PKEY *pkey, unsigned char *unencrypted_text, size_t text_len);
+unsigned char *decrypt(EVP_PKEY *pkey, unsigned char *encrypted_text, size_t encrypted_text_len);
 
 #endif //C_RSA_H
