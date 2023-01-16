@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include "../shared_functions/shared_functions.h"
 
 // Global variables
 int PORT = 5555;

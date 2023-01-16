@@ -10,11 +10,16 @@
 #include "openssl/rsa.h"
 #include "openssl/evp.h"
 #include "openssl/engine.h"
+#include "openssl/decoder.h"
 
 #include "string.h"
 
+// Asymmetric functions
+EVP_PKEY *asymmetric_generate_keys();
+unsigned char *asymmetric_encrypt(EVP_PKEY *pkey, unsigned char *unencrypted_text, size_t text_len);
+unsigned char *asymmetric_decrypt(EVP_PKEY *pkey, unsigned char *encrypted_text, size_t encrypted_text_len);
 
-EVP_PKEY *generate_keys();
-char *encrypt(EVP_PKEY *pkey, char *message, unsigned int message_len);
+// Symmetric functions
+
 
 #endif //C_RSA_H
