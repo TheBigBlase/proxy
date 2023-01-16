@@ -2,9 +2,10 @@ use openssl::pkey::{Public, Private};
 use openssl::error::ErrorStack;
 use openssl::rsa::{Rsa, Padding};
 use std::fs::File;
-use std::io::{Write, Read, BufReader};
+use std::io::{Write, Read};
 use std::path::Path;
 
+// Generate rsa public and private keys and store them
 pub fn generate_rsa_keys(pub_path: &Path, priv_path: &Path) -> Result<Rsa<Private>, ErrorStack> {
     let rsa = Rsa::generate(2048)?;
     let mut pub_file = File::create(pub_path).unwrap();
@@ -16,7 +17,8 @@ pub fn generate_rsa_keys(pub_path: &Path, priv_path: &Path) -> Result<Rsa<Privat
     Ok(rsa)
 }
 
-pub fn load_rsa_public_key(public_key_path: &Path) -> Result<Rsa<Public>, ErrorStack> {
+// Load the public rsa key from a file with pem format
+pub fn load_rsa_public_key_from_file(public_key_path: &Path) -> Result<Rsa<Public>, ErrorStack> {
     let mut public_key_file: File = File::open(public_key_path).unwrap();
     let buffer = &mut Vec::new();
     public_key_file.read_to_end(buffer).unwrap();
@@ -25,6 +27,18 @@ pub fn load_rsa_public_key(public_key_path: &Path) -> Result<Rsa<Public>, ErrorS
 
     Ok(public_key)
 }
+
+// Load the private rsa key from a file with pem format
+pub fn load_rsa_private_key_from_file(private_key_path: &Path) -> Result<Rsa<Private>, ErrorStack> {
+    let mut private_key_file: File = File::open(private_key_path).unwrap();
+    let buffer = &mut Vec::new();
+    private_key_file.read_to_end(buffer).unwrap();
+
+    let private_key = Rsa::private_key_from_pem(buffer)?;
+
+    Ok(private_key)
+}
+
 
 /// Encrypts data using the public rsa key, returning the encrypted text and the number of
 /// encrypted bytes
@@ -38,7 +52,6 @@ pub fn encrypt_rsa(key: Rsa<Public>, data: &[u8]) -> Result<(Vec<u8>, usize), Er
 /// Decrypts data using the private rsa key, returning the decrypted text and the number of
 /// decrypted bytes
 pub fn decrypt_rsa(key: Rsa<Private>, encrypted_text: &[u8]) -> Result<(Vec<u8>, usize), ErrorStack> { 
-    
     let mut decrypted_text = vec![0; key.size() as usize];
     let decrypted_len = key.private_decrypt(encrypted_text, &mut decrypted_text, Padding::PKCS1)?;
 
