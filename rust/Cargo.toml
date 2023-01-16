@@ -1,0 +1,19 @@
+[package]
+name = "rust"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "client"
+path = "src/client.rs"
+
+[[bin]]
+name = "server"
+path = "src/server.rs"
+
+[[bin]]
+name = "test_crypto"
+path = "src/test_crypto.rs"
+
+[dependencies]
+openssl = "0.10.45"
