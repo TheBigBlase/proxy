@@ -6,7 +6,11 @@ use std::io::{Write, Read};
 use std::path::Path;
 
 // Generate rsa public and private keys and store them
-pub fn generate_rsa_keys(pub_path: &Path, priv_path: &Path) -> Result<Rsa<Private>, ErrorStack> {
+pub fn generate_rsa_keys(pub_path: &str, priv_path: &str) -> Result<Rsa<Private>, ErrorStack> {
+
+    let pub_path = Path::new(pub_path);
+    let priv_path = Path::new(priv_path);
+
     let rsa = Rsa::generate(2048)?;
     let mut pub_file = File::create(pub_path).unwrap();
     let mut priv_file = File::create(priv_path).unwrap();
@@ -18,7 +22,10 @@ pub fn generate_rsa_keys(pub_path: &Path, priv_path: &Path) -> Result<Rsa<Privat
 }
 
 // Load the public rsa key from a file with pem format
-pub fn load_rsa_public_key_from_file(public_key_path: &Path) -> Result<Rsa<Public>, ErrorStack> {
+pub fn load_rsa_public_key_from_file(public_key_path: &str) -> Result<Rsa<Public>, ErrorStack> {
+    
+    let public_key_path = Path::new(public_key_path);
+
     let mut public_key_file: File = File::open(public_key_path).unwrap();
     let buffer = &mut Vec::new();
     public_key_file.read_to_end(buffer).unwrap();
@@ -29,7 +36,10 @@ pub fn load_rsa_public_key_from_file(public_key_path: &Path) -> Result<Rsa<Publi
 }
 
 // Load the private rsa key from a file with pem format
-pub fn load_rsa_private_key_from_file(private_key_path: &Path) -> Result<Rsa<Private>, ErrorStack> {
+pub fn load_rsa_private_key_from_file(private_key_path: &str) -> Result<Rsa<Private>, ErrorStack> {
+
+    let private_key_path = Path::new(private_key_path);
+
     let mut private_key_file: File = File::open(private_key_path).unwrap();
     let buffer = &mut Vec::new();
     private_key_file.read_to_end(buffer).unwrap();
@@ -38,7 +48,6 @@ pub fn load_rsa_private_key_from_file(private_key_path: &Path) -> Result<Rsa<Pri
 
     Ok(private_key)
 }
-
 
 /// Encrypts data using the public rsa key, returning the encrypted text and the number of
 /// encrypted bytes
@@ -57,3 +66,4 @@ pub fn decrypt_rsa(key: Rsa<Private>, encrypted_text: &[u8]) -> Result<(Vec<u8>,
 
     Ok((decrypted_text, decrypted_len))
 }
+
