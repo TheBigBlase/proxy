@@ -30,7 +30,12 @@ impl Asym {
         let buffer = &mut Vec::new();
         private_key_file.read_to_end(buffer).unwrap();
 
-        let private_key = Rsa::private_key_from_pem(buffer).unwrap();
+        Asym::load_from_priv_pem(buffer) 
+    }
+
+    // Load the private rsa key from a file with pem format
+    pub fn load_from_priv_pem(private_pem: &[u8]) -> Asym {
+        let private_key = Rsa::private_key_from_pem(private_pem).unwrap();
 
         Asym {
             private_key: Some(private_key),
@@ -46,7 +51,12 @@ impl Asym {
         let buffer = &mut Vec::new();
         public_key_file.read_to_end(buffer).unwrap();
 
-        let public_key = Rsa::public_key_from_pem(buffer).unwrap();
+        Asym::load_from_pub_pem(buffer)
+    }
+
+    // Load the public rsa key from a file with pem format
+    pub fn load_from_pub_pem(public_pem: &[u8]) -> Asym {
+        let public_key = Rsa::public_key_from_pem(public_pem).unwrap();
 
         Asym {
             private_key: None,
@@ -103,6 +113,9 @@ impl Asym {
             .unwrap()
             .private_decrypt(encrypted_text, &mut decrypted_text, Padding::PKCS1)
             .unwrap();
+        
+        // Trucates the additionnal bytes
+        decrypted_text.truncate(decrypted_len);
 
         decrypted_text
     }
@@ -139,7 +152,7 @@ impl Asym {
 
 pub struct Sym {
     cipher: Cipher,
-    key: [u8; 16],
+    key: Vec<u8>,
 }
 
 impl Sym {
@@ -149,19 +162,19 @@ impl Sym {
 
         Sym {
             cipher: Cipher::aes_128_cbc(),
-            key: buf,
+            key: Vec::from(buf),
         }
     }
 
-    pub fn from_key(key: [u8; 16]) -> Sym {
+    pub fn from_key(key: Vec<u8>) -> Sym {
         Sym {
             cipher: Cipher::aes_128_cbc(),
-            key: key,
+            key,
         }
     }
 
-    pub fn get_key(&self) -> [u8; 16] {
-        self.key
+    pub fn get_key(&self) -> &Vec<u8> {
+        &self.key
     }
 
     pub fn encrypt(&self, data: &[u8]) -> Vec<u8> {

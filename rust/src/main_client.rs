@@ -1,18 +1,24 @@
-mod client;
-mod shared_functions;
-use std::io::Write;
-use std::net::TcpStream;
+mod client { pub mod client; }
+mod shared_functions { pub mod crypto; pub mod network; }
+
+use std::io::{ Write, Read };
+use std::net::{ TcpStream, TcpListener };
+use client::client::ProxyConnection;
 
 fn main() -> std::io::Result<()> {
-    let mut stream = TcpStream::connect("127.0.0.1:5303").unwrap();
+        
+    let proxy_connection = ProxyConnection::connect("127.0.0.1", "28240");
 
-    let rsa_keys = shared_functions::generate_rsa_keys("id_rsa.pub", "id_rsa").unwrap();
+    let address_browser = "localhost:1700";
+    println!("Listening browser on: {}", address_browser);
+    let browser_listener = TcpListener::bind(address_browser)?;
 
-    let pub_key = shared_functions::load_rsa_public_key_from_file("id_rsa.pub").unwrap();
+    loop {
+        let (mut file_descriptor, _) = browser_listener.accept().unwrap();
 
-    let (message, len) = shared_functions::encrypt_rsa(pub_key, &rsa_keys.public_key_to_pem().unwrap()).unwrap();
+        let mut buf: [u8; 4096] = [0; 4096];
+        let nb_bytes_written = file_descriptor.read(&mut buf).unwrap();
 
-    let res = stream.write(&message);
-
-    Ok(())
+        println!("{:?}", String::from_utf8_lossy(&buf));
+    }
 }
