@@ -2,3 +2,7 @@
 **/__pycache__/
 **/id_rsa*
 cmake-build-debug
+
+# Rust
+target/
+Cargo.lock
