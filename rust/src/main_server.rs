@@ -10,7 +10,6 @@ fn main() -> std::io::Result<()> {
     println!("Listening on: {}", address_port);
     let listener = TcpListener::bind(address_port)?;
 
-
     // accept connections and process them serially
     for stream in listener.incoming() {
         server::server::handle_client(stream?);

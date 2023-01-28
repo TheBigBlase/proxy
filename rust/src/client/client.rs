@@ -1,24 +1,21 @@
-use std::{net::{TcpListener, TcpStream}, io::{Write, Read, BufRead}};
-use std::convert::TryInto;
-
+use std::{net::TcpStream, io::Write};
 use crate::shared_functions::crypto::{Asym, Sym};
-use crate::shared_functions::network::{read_and_parse};
+use crate::shared_functions::network::read_and_parse;
 
-
-pub struct ProxyConnection {
+// Struct storing objects to communicate with the proxy server
+pub struct ProxyServer {
     stream: TcpStream,
-    asym_keys: Asym,
     sym_key: Sym,
 }
 
-impl ProxyConnection {
-    // Connects to the proxy server
-    pub fn connect(ip: &str, port: &str) -> ProxyConnection {
+impl ProxyServer {
+    // Connects to the proxy server and establish a secured connection
+    pub fn connect(ip: &str, port: &str) -> ProxyServer {
         let mut address = String::from(ip);
         address.push(':');
         address.push_str(port);
 
-        println!("Connecting to the proxy at {}", address);
+        println!("Connecting to the proxy at: {}", address);
         let mut stream = TcpStream::connect(address).unwrap();
 
         // Creating new key pairs
@@ -31,24 +28,40 @@ impl ProxyConnection {
         let pub_key = asym_keys.get_pem_pub();
 
         println!("Sending the public key");
-
         stream.write(&pub_key).unwrap();
 
-        // Getting the symetric key
+        // Getting the symetric key from the server
         let response = read_and_parse(&mut stream);
 
         // Decrypting the key
         let decrypted_sym_key = asym_keys.decrypt(&response);
 
+        // Initializing Sym struct
         let sym_key = Sym::from_key(decrypted_sym_key.to_vec());
 
-        // Sending the encrypted 'test phrase' of the symetric key
+        // Sending the encrypted 'test phrase' to the server
         stream.write(&sym_key.encrypt(b"Comment est votre blanquette ?")).unwrap();
 
-        let response = read_and_parse(&mut stream);
+        // Getting the corresponding test phrase back
+        let response = &sym_key.decrypt(&read_and_parse(&mut stream));
 
-        println!("{:?}", String::from_utf8_lossy(&sym_key.decrypt(&response)));
+        // If the test phrase is not correct
+        if response != b"Ma blanquette est bonne" {
+            panic!("{:?}: Sym key verification did not work", stream);
+        }
 
-        ProxyConnection { stream, asym_keys, sym_key} 
+        ProxyServer { stream, sym_key} 
+    }
+
+    // Send a response to the server. Automatically encrypts the response.
+    pub fn send_request(&mut self, request: &[u8]) {
+        let message = self.sym_key.encrypt(request);
+        self.stream.write(&message).unwrap();
+    }
+
+    // Waits for the server response and returns it. Automatically decrypts the response.
+    pub fn wait_response(&mut self) -> Vec<u8> {
+        let encrypted_response = read_and_parse(&mut self.stream);
+        self.sym_key.decrypt(&encrypted_response)
     }
 }

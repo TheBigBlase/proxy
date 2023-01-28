@@ -17,3 +17,4 @@ path = "src/test_crypto.rs"
 
 [dependencies]
 openssl = "0.10.45"
+reqwest = { version = "0.11.14", features = ["blocking"] }
