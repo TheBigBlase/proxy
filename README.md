@@ -6,8 +6,11 @@ and how to encrypt data from the client to the proxy relatively fast.
 ## Contributors
 
 Calvin Ngor
+
 Maxime Paulin
+
 Valentin Richard
+
 Andrew Mary Huet de Barochez
 
 ## Phython implementation
