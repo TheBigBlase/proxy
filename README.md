@@ -3,6 +3,13 @@
 This is a student assignment aiming at understanding how a proxy works, 
 and how to encrypt data from the client to the proxy relatively fast.
 
+## Contributors
+
+Calvin Ngor
+Maxime Paulin
+Valentin Richard
+Andrew Mary Huet de Barochez
+
 ## Phython implementation
 
 We started by creating a maquette of the proxy using python. It helped us figuring out the right architecture of the project and also what were the main issues.
