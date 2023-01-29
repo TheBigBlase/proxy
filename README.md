@@ -14,7 +14,7 @@ The main issues were:
 
 The python project is organized as it follows:
 
-```bash
+```
 ├── id_rsa                      Private key
 ├── id_rsa.pub                  Public key
 ├── main.py                     Main for server or client
@@ -57,7 +57,7 @@ After implementing the project in python, we decided to realize a version in rus
 
 The rust project is organized as it follows:
 
-```bash
+```
 ├── Cargo.toml                Cargo configuration file
 ├── id_rsa                    Private key
 ├── id_rsa.pub                Public key
